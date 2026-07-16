@@ -14,7 +14,7 @@ $unreadMessages = admin_count('contact_messages', 'is_read = 0');
 $assistantLogs = admin_count('assistant_logs');
 
 $recentAppointments = $conn->query(
-    "SELECT a.booking_code, a.patient_name, a.doctor, a.appointment_date, a.appointment_time, a.status, u.email AS account_email
+    "SELECT a.booking_code, a.patient_name, a.nic, a.doctor, a.appointment_date, a.appointment_time, a.status, u.email AS account_email
      FROM appointments a
      LEFT JOIN users u ON a.user_id = u.id
      ORDER BY a.created_at DESC
@@ -95,6 +95,7 @@ $recentMessages = $conn->query(
                         <td>
                           <strong><?= e($appointment['patient_name']) ?></strong>
                           <span><?= e(admin_format_booking_datetime($appointment['appointment_date'], $appointment['appointment_time'])) ?></span>
+                          <span>NIC: <?= e($appointment['nic']) ?></span>
                         </td>
                         <td><?= e($appointment['doctor']) ?></td>
                         <td>

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 require_once __DIR__ . '/../../includes/app.php';
 
 const ADMIN_STATUSES = [
@@ -11,7 +9,7 @@ const ADMIN_STATUSES = [
     'Cancelled',
 ];
 
-function admin_flash(string $type, string $message): void
+function admin_flash($type, $message)
 {
     $_SESSION['admin_flash'] = [
         'type' => $type,
@@ -19,15 +17,19 @@ function admin_flash(string $type, string $message): void
     ];
 }
 
-function admin_get_flash(): ?array
+function admin_get_flash()
 {
     $flash = $_SESSION['admin_flash'] ?? null;
     unset($_SESSION['admin_flash']);
 
-    return is_array($flash) ? $flash : null;
+    if (is_array($flash)) {
+        return $flash;
+    }
+
+    return null;
 }
 
-function admin_render_shell_start(string $title, string $active = 'dashboard'): void
+function admin_render_shell_start($title, $active = 'dashboard')
 {
     $admin = require_admin();
     $flash = admin_get_flash();
@@ -95,7 +97,7 @@ function admin_render_shell_start(string $title, string $active = 'dashboard'): 
     <?php
 }
 
-function admin_render_shell_end(): void
+function admin_render_shell_end()
 {
     ?>
       </section>
@@ -105,7 +107,7 @@ function admin_render_shell_end(): void
     <?php
 }
 
-function admin_count(string $table, string $where = ''): int
+function admin_count($table, $where = '')
 {
     global $conn;
     $sql = "SELECT COUNT(*) AS total FROM {$table}";
@@ -119,20 +121,21 @@ function admin_count(string $table, string $where = ''): int
     return (int) ($row['total'] ?? 0);
 }
 
-function admin_format_datetime(?string $value): string
+function admin_format_datetime($value)
 {
     if (!$value) {
         return 'Not available';
     }
 
     try {
-        return (new DateTime($value))->format('M j, Y g:i A');
-    } catch (Throwable) {
+        $dateTime = new DateTime($value);
+        return $dateTime->format('M j, Y g:i A');
+    } catch (Throwable $exception) {
         return $value;
     }
 }
 
-function admin_format_booking_datetime(string $date, string $time): string
+function admin_format_booking_datetime($date, $time)
 {
     $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $date . ' ' . $time);
     if (!$dateTime) {
@@ -142,12 +145,19 @@ function admin_format_booking_datetime(string $date, string $time): string
     return $dateTime->format('M j, Y g:i A');
 }
 
-function admin_status_class(string $status): string
+function admin_status_class($status)
 {
-    return match ($status) {
-        'Confirmed' => 'status-confirmed',
-        'Completed' => 'status-completed',
-        'Cancelled' => 'status-cancelled',
-        default => 'status-pending',
-    };
+    if ($status === 'Confirmed') {
+        return 'status-confirmed';
+    }
+
+    if ($status === 'Completed') {
+        return 'status-completed';
+    }
+
+    if ($status === 'Cancelled') {
+        return 'status-cancelled';
+    }
+
+    return 'status-pending';
 }

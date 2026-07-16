@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/app.php';
 $user = require_login();
 $appointments = [];
 $stmt = $conn->prepare(
-    "SELECT booking_code, doctor, appointment_date, appointment_time, visit_type, reason, status, created_at
+    "SELECT booking_code, nic, doctor, appointment_date, appointment_time, visit_type, reason, status, created_at
      FROM appointments
      WHERE user_id = ?
      ORDER BY appointment_date DESC, appointment_time DESC, created_at DESC"
@@ -29,7 +29,7 @@ foreach ($appointments as $appointment) {
         $upcomingCount++;
     }
 
-    if (str_contains(strtolower($appointment['status']), 'pending')) {
+    if (strpos(strtolower($appointment['status']), 'pending') !== false) {
         $pendingCount++;
     }
 
@@ -38,7 +38,7 @@ foreach ($appointments as $appointment) {
     }
 }
 
-function format_booking_date(string $date, string $time): string
+function format_booking_date($date, $time)
 {
     $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $date . ' ' . $time);
     if (!$dateTime) {
@@ -133,6 +133,7 @@ function format_booking_date(string $date, string $time): string
                       <h3><?= e($appointment['doctor']) ?></h3>
                       <p><?= e($appointment['reason']) ?></p>
                       <span>Booking ID: <?= e($appointment['booking_code']) ?></span>
+                      <span>NIC: <?= e($appointment['nic']) ?></span>
                     </div>
                     <div class="booking-status"><?= e($appointment['status']) ?></div>
                   </article>

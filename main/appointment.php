@@ -4,13 +4,19 @@ require_once __DIR__ . '/includes/app.php';
 
 $user = require_login();
 $errors = [];
-$doctorOptions = array_map('doctor_display_name', public_doctors());
+$doctorOptions = [];
+$doctors = public_doctors();
+
+foreach ($doctors as $doctor) {
+    $doctorOptions[] = doctor_display_name($doctor);
+}
+
 $visitTypes = ['Clinic visit', 'Online consultation', 'Follow-up'];
 $selectedDoctor = '';
 
 if (isset($_GET['doctor'])) {
     foreach ($doctorOptions as $option) {
-        if (str_contains($option, $_GET['doctor'])) {
+        if (strpos($option, $_GET['doctor']) !== false) {
             $selectedDoctor = $option;
             break;
         }
@@ -21,6 +27,7 @@ $form = [
     'patient_name' => $user['fullname'],
     'email' => $user['email'],
     'phone' => $user['phone'],
+    'nic' => '',
     'doctor' => $selectedDoctor,
     'date' => '',
     'time' => '',
@@ -33,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'patient_name' => trim($_POST['patient_name'] ?? ''),
         'email' => trim($_POST['email'] ?? ''),
         'phone' => trim($_POST['phone'] ?? ''),
+        'nic' => trim($_POST['nic'] ?? ''),
         'doctor' => trim($_POST['doctor'] ?? ''),
         'date' => trim($_POST['date'] ?? ''),
         'time' => trim($_POST['time'] ?? ''),
@@ -51,6 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cleanPhone = preg_replace('/[^\d+]/', '', $form['phone']);
     if ($cleanPhone === '' || strlen($cleanPhone) < 7) {
         $errors[] = 'Enter a valid phone number.';
+    }
+
+    $cleanNic = strtoupper(str_replace([' ', '-'], '', $form['nic']));
+    if (!preg_match('/^([0-9]{9}[VX]|[0-9]{12})$/', $cleanNic)) {
+        $errors[] = 'Enter a valid NIC number.';
     }
 
     if (!in_array($form['doctor'], $doctorOptions, true)) {
@@ -83,21 +96,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     patient_name,
                     email,
                     phone,
+                    nic,
                     doctor,
                     appointment_date,
                     appointment_time,
                     visit_type,
                     reason
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             $userId = (int) $user['id'];
             $stmt->bind_param(
-                "sissssssss",
+                "sisssssssss",
                 $bookingCode,
                 $userId,
                 $form['patient_name'],
                 $form['email'],
                 $cleanPhone,
+                $cleanNic,
                 $form['doctor'],
                 $form['date'],
                 $form['time'],
@@ -188,6 +203,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 required
               />
             </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nic">NIC Number</label>
+            <input
+              id="nic"
+              name="nic"
+              type="text"
+              value="<?= e($form['nic']) ?>"
+              placeholder="Enter NIC number"
+              maxlength="12"
+              required
+            />
           </div>
 
           <div class="form-group">

@@ -21,7 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $updated = $stmt->affected_rows;
             $stmt->close();
 
-            doctor_flash($updated > 0 ? 'success' : 'error', $updated > 0 ? 'Appointment status updated.' : 'Appointment was not assigned to this doctor.');
+            if ($updated > 0) {
+                doctor_flash('success', 'Appointment status updated.');
+            } else {
+                doctor_flash('error', 'Appointment was not assigned to this doctor.');
+            }
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
             doctor_flash('error', 'Appointment status could not be updated.');
@@ -35,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $stmt = $conn->prepare(
-    "SELECT id, booking_code, patient_name, email, phone, appointment_date, appointment_time, visit_type, reason, status, created_at
+    "SELECT id, booking_code, patient_name, email, phone, nic, appointment_date, appointment_time, visit_type, reason, status, created_at
      FROM appointments
      WHERE doctor = ?
      ORDER BY appointment_date DESC, appointment_time DESC"
@@ -128,6 +132,7 @@ $doctor = doctor_render_shell_start('My Appointments');
                         <strong><?= e($appointment['patient_name']) ?></strong>
                         <span><?= e($appointment['email']) ?></span>
                         <span><?= e($appointment['phone']) ?></span>
+                        <span>NIC: <?= e($appointment['nic']) ?></span>
                       </td>
                       <td>
                         <strong><?= e(doctor_format_booking_datetime($appointment['appointment_date'], $appointment['appointment_time'])) ?></strong>

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   patient_name VARCHAR(120) NOT NULL,
   email VARCHAR(190) NOT NULL,
   phone VARCHAR(32) NOT NULL,
+  nic VARCHAR(20) NOT NULL,
   doctor VARCHAR(160) NOT NULL,
   appointment_date DATE NOT NULL,
   appointment_time TIME NOT NULL,
@@ -41,7 +42,8 @@ CREATE TABLE IF NOT EXISTS appointments (
   status VARCHAR(40) NOT NULL DEFAULT 'Pending confirmation',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_appointments_user_date (user_id, appointment_date)
+  INDEX idx_appointments_user_date (user_id, appointment_date),
+  INDEX idx_appointments_nic (nic)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS contact_messages (

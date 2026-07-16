@@ -79,7 +79,12 @@ try {
         );
 
         foreach ($defaultDoctors as $doctor) {
-            [$fullname, $email, $phone, $specialty, $availableDays] = $doctor;
+            $fullname = $doctor[0];
+            $email = $doctor[1];
+            $phone = $doctor[2];
+            $specialty = $doctor[3];
+            $availableDays = $doctor[4];
+
             $stmt->bind_param("ssssss", $fullname, $email, $phone, $specialty, $availableDays, $defaultPassword);
             $stmt->execute();
         }
@@ -95,6 +100,7 @@ try {
             patient_name VARCHAR(120) NOT NULL,
             email VARCHAR(190) NOT NULL,
             phone VARCHAR(32) NOT NULL,
+            nic VARCHAR(20) NOT NULL,
             doctor VARCHAR(160) NOT NULL,
             appointment_date DATE NOT NULL,
             appointment_time TIME NOT NULL,
@@ -103,9 +109,28 @@ try {
             status VARCHAR(40) NOT NULL DEFAULT 'Pending confirmation',
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_appointments_user_date (user_id, appointment_date)
+            INDEX idx_appointments_user_date (user_id, appointment_date),
+            INDEX idx_appointments_nic (nic)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     );
+
+    $appointmentColumns = [];
+    $columns = $conn->query("SHOW COLUMNS FROM appointments");
+    while ($column = $columns->fetch_assoc()) {
+        $appointmentColumns[$column['Field']] = true;
+    }
+
+    if (!isset($appointmentColumns['nic'])) {
+        $conn->query(
+            "ALTER TABLE appointments
+             ADD COLUMN nic VARCHAR(20) NOT NULL DEFAULT '' AFTER phone"
+        );
+    }
+
+    $nicIndex = $conn->query("SHOW INDEX FROM appointments WHERE Key_name = 'idx_appointments_nic'");
+    if ($nicIndex->num_rows === 0) {
+        $conn->query("ALTER TABLE appointments ADD INDEX idx_appointments_nic (nic)");
+    }
 
     $conn->query(
         "CREATE TABLE IF NOT EXISTS contact_messages (

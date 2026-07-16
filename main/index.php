@@ -4,13 +4,28 @@ require_once __DIR__ . '/includes/app.php';
 
 $user = current_user();
 $contactState = $_GET['contact'] ?? '';
-$contactMessage = match ($contactState) {
-    'saved' => 'Message sent. The support team will follow up soon.',
-    'failed' => 'Message could not be sent. Please try again.',
-    default => ''
-};
-$contactClass = $contactState === 'saved' ? 'form-alert success' : 'form-alert';
+
+// Show a small message after the contact form is submitted.
+$contactMessage = '';
+if ($contactState === 'saved') {
+    $contactMessage = 'Message sent. The support team will follow up soon.';
+} elseif ($contactState === 'failed') {
+    $contactMessage = 'Message could not be sent. Please try again.';
+}
+
+$contactClass = 'form-alert';
+if ($contactState === 'saved') {
+    $contactClass = 'form-alert success';
+}
+
 $doctors = public_doctors();
+$specialties = [];
+
+foreach ($doctors as $doctor) {
+    if (!in_array($doctor['specialty'], $specialties, true)) {
+        $specialties[] = $doctor['specialty'];
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -22,7 +37,7 @@ $doctors = public_doctors();
       content="MediBridge AI helps patients book appointments, prepare for consultations, and manage care details online."
     />
     <title>MediBridge AI | Digital Healthcare Access</title>
-    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../style.css?v=20260716-1" />
     <script src="app.js" defer></script>
   </head>
   <body data-page="home">
@@ -197,7 +212,7 @@ $doctors = public_doctors();
             </div>
             <select id="specialtyFilter" aria-label="Filter doctors by specialty">
               <option value="all">All specialties</option>
-              <?php foreach (array_unique(array_column($doctors, 'specialty')) as $specialty): ?>
+              <?php foreach ($specialties as $specialty): ?>
                 <option value="<?= e(specialty_slug($specialty)) ?>"><?= e($specialty) ?></option>
               <?php endforeach; ?>
             </select>

@@ -22,7 +22,11 @@ if ($message === '' || $reply === '') {
 
 try {
     $user = current_user();
-    $userId = $user ? (int) $user['id'] : null;
+    $userId = null;
+    if ($user) {
+        $userId = (int) $user['id'];
+    }
+
     $sessionToken = session_id();
     $stmt = $conn->prepare(
         "INSERT INTO assistant_logs (user_id, session_token, user_message, bot_reply)

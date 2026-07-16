@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 require_once __DIR__ . '/../../includes/app.php';
 
 const DOCTOR_STATUSES = [
@@ -11,7 +9,7 @@ const DOCTOR_STATUSES = [
     'Cancelled',
 ];
 
-function doctor_flash(string $type, string $message): void
+function doctor_flash($type, $message)
 {
     $_SESSION['doctor_flash'] = [
         'type' => $type,
@@ -19,15 +17,19 @@ function doctor_flash(string $type, string $message): void
     ];
 }
 
-function doctor_get_flash(): ?array
+function doctor_get_flash()
 {
     $flash = $_SESSION['doctor_flash'] ?? null;
     unset($_SESSION['doctor_flash']);
 
-    return is_array($flash) ? $flash : null;
+    if (is_array($flash)) {
+        return $flash;
+    }
+
+    return null;
 }
 
-function doctor_render_shell_start(string $title): array
+function doctor_render_shell_start($title)
 {
     $doctor = require_doctor();
     $flash = doctor_get_flash();
@@ -92,7 +94,7 @@ function doctor_render_shell_start(string $title): array
     return $doctor;
 }
 
-function doctor_render_shell_end(): void
+function doctor_render_shell_end()
 {
     ?>
       </section>
@@ -102,20 +104,21 @@ function doctor_render_shell_end(): void
     <?php
 }
 
-function doctor_format_datetime(?string $value): string
+function doctor_format_datetime($value)
 {
     if (!$value) {
         return 'Not available';
     }
 
     try {
-        return (new DateTime($value))->format('M j, Y g:i A');
-    } catch (Throwable) {
+        $dateTime = new DateTime($value);
+        return $dateTime->format('M j, Y g:i A');
+    } catch (Throwable $exception) {
         return $value;
     }
 }
 
-function doctor_format_booking_datetime(string $date, string $time): string
+function doctor_format_booking_datetime($date, $time)
 {
     $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $date . ' ' . $time);
     if (!$dateTime) {

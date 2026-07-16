@@ -95,6 +95,7 @@ admin_render_shell_start('Appointments', 'appointments');
                         <strong><?= e($appointment['patient_name']) ?></strong>
                         <span><?= e($appointment['email']) ?></span>
                         <span><?= e($appointment['phone']) ?></span>
+                        <span>NIC: <?= e($appointment['nic']) ?></span>
                       </td>
                       <td>
                         <strong><?= e($appointment['doctor']) ?></strong>

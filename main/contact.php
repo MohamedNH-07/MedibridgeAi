@@ -18,7 +18,11 @@ if ($fullname === '' || !$email || $message === '') {
 
 try {
     $user = current_user();
-    $userId = $user ? (int) $user['id'] : null;
+    $userId = null;
+    if ($user) {
+        $userId = (int) $user['id'];
+    }
+
     $stmt = $conn->prepare(
         "INSERT INTO contact_messages (user_id, fullname, email, message)
          VALUES (?, ?, ?, ?)"

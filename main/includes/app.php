@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -10,12 +8,13 @@ date_default_timezone_set('Asia/Colombo');
 
 require_once __DIR__ . '/../../database/db.php';
 
-function e(mixed $value): string
+// Use this when printing database or form values inside HTML.
+function e($value)
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-function current_user(): ?array
+function current_user()
 {
     if (empty($_SESSION['user_id'])) {
         return null;
@@ -49,7 +48,7 @@ function current_user(): ?array
     return $user;
 }
 
-function current_doctor(): ?array
+function current_doctor()
 {
     if (empty($_SESSION['doctor_id'])) {
         return null;
@@ -82,23 +81,23 @@ function current_doctor(): ?array
     return $doctor;
 }
 
-function is_logged_in(): bool
+function is_logged_in()
 {
     return current_user() !== null;
 }
 
-function is_doctor_logged_in(): bool
+function is_doctor_logged_in()
 {
     return current_doctor() !== null;
 }
 
-function is_admin(): bool
+function is_admin()
 {
     $user = current_user();
     return $user !== null && (int) ($user['is_admin'] ?? 0) === 1;
 }
 
-function admin_exists(): bool
+function admin_exists()
 {
     global $conn;
     $result = $conn->query("SELECT COUNT(*) AS total FROM users WHERE is_admin = 1");
@@ -106,7 +105,7 @@ function admin_exists(): bool
     return (int) ($row['total'] ?? 0) > 0;
 }
 
-function require_login(): array
+function require_login()
 {
     $user = current_user();
     if (!$user) {
@@ -117,7 +116,7 @@ function require_login(): array
     return $user;
 }
 
-function require_admin(): array
+function require_admin()
 {
     if (!admin_exists()) {
         header("Location: setup.php");
@@ -133,7 +132,7 @@ function require_admin(): array
     return $user;
 }
 
-function require_doctor(): array
+function require_doctor()
 {
     $doctor = current_doctor();
     if (!$doctor) {
@@ -144,48 +143,18 @@ function require_doctor(): array
     return $doctor;
 }
 
-function default_doctors(): array
-{
-    return [
-        [
-            'fullname' => 'Dr. Aisha Perera',
-            'specialty' => 'General Physician',
-            'available_days' => 'Mon, Wed, Fri',
-            'tag' => 'Clinic and online',
-        ],
-        [
-            'fullname' => 'Dr. Rajan Kumar',
-            'specialty' => 'Cardiologist',
-            'available_days' => 'Tue, Thu',
-            'tag' => 'Referral friendly',
-        ],
-        [
-            'fullname' => 'Dr. Sameera Dias',
-            'specialty' => 'Dermatologist',
-            'available_days' => 'Mon, Sat',
-            'tag' => 'Skin and allergy',
-        ],
-        [
-            'fullname' => 'Dr. Nimal Fernando',
-            'specialty' => 'Pediatrician',
-            'available_days' => 'Wed, Fri, Sun',
-            'tag' => 'Child care',
-        ],
-    ];
-}
-
-function specialty_slug(string $specialty): string
+function specialty_slug($specialty)
 {
     $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $specialty) ?? '');
     return trim($slug, '-') ?: 'doctor';
 }
 
-function doctor_display_name(array $doctor): string
+function doctor_display_name($doctor)
 {
     return $doctor['fullname'] . ' - ' . $doctor['specialty'];
 }
 
-function public_doctors(): array
+function public_doctors()
 {
     global $conn;
     $doctors = [];
@@ -204,7 +173,7 @@ function public_doctors(): array
     return $doctors;
 }
 
-function initials(string $name): string
+function initials($name)
 {
     $parts = preg_split('/\s+/', trim($name)) ?: [];
     $letters = '';
@@ -216,10 +185,11 @@ function initials(string $name): string
     return $letters !== '' ? $letters : 'MB';
 }
 
-function render_nav(string $active = 'home'): void
+function render_nav($active = 'home')
 {
     $loggedIn = is_logged_in();
     $doctorLoggedIn = is_doctor_logged_in();
+    $admin = is_admin();
     $homePrefix = $active === 'home' ? '' : 'index.php';
     ?>
     <nav class="navbar">
@@ -233,13 +203,13 @@ function render_nav(string $active = 'home'): void
         <li><a href="<?= e($homePrefix) ?>#services">Services</a></li>
         <li><a href="<?= e($homePrefix) ?>#doctors">Doctors</a></li>
         <li><a href="appointment.php" class="<?= $active === 'appointment' ? 'active' : '' ?>">Book Appointment</a></li>
-        <?php if ($loggedIn && !is_admin()): ?>
+        <?php if ($loggedIn && !$admin): ?>
           <li><a href="customer.php" class="<?= $active === 'customer' ? 'active' : '' ?>">My Bookings</a></li>
         <?php endif; ?>
         <li><a href="<?= e($homePrefix) ?>#about">About</a></li>
         <li><a href="<?= e($homePrefix) ?>#contact">Contact</a></li>
         <li><a href="chatbot.php" class="<?= $active === 'assistant' ? 'active' : '' ?>">AI Assistant</a></li>
-        <?php if (is_admin()): ?>
+        <?php if ($admin): ?>
           <li><a href="admin/index.php" class="btn-login">Admin</a></li>
           <li><a href="logout.php" class="btn-login">Logout</a></li>
         <?php elseif ($doctorLoggedIn): ?>
@@ -268,8 +238,11 @@ function render_nav(string $active = 'home'): void
     <?php
 }
 
-function render_footer(): void
+function render_footer()
 {
+    $loggedIn = is_logged_in();
+    $doctorLoggedIn = is_doctor_logged_in();
+    $admin = is_admin();
     ?>
     <footer class="footer">
       <div class="footer-inner">
@@ -282,13 +255,13 @@ function render_footer(): void
           <a href="index.php#doctors">Doctors</a>
           <a href="chatbot.php">AI Assistant</a>
           <a href="appointment.php">Book Care</a>
-          <?php if (is_logged_in() && !is_admin()): ?>
+          <?php if ($loggedIn && !$admin): ?>
             <a href="customer.php">My Bookings</a>
           <?php endif; ?>
-          <?php if (is_admin()): ?>
+          <?php if ($admin): ?>
             <a href="admin/index.php">Admin</a>
           <?php endif; ?>
-          <?php if (is_doctor_logged_in()): ?>
+          <?php if ($doctorLoggedIn): ?>
             <a href="doctor/index.php">Doctor Panel</a>
           <?php endif; ?>
         </div>
@@ -296,11 +269,4 @@ function render_footer(): void
       </div>
     </footer>
     <?php
-}
-
-function flash_message(string $name): ?string
-{
-    $value = $_SESSION[$name] ?? null;
-    unset($_SESSION[$name]);
-    return is_string($value) ? $value : null;
 }
